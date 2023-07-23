@@ -1,0 +1,39 @@
+import numpy as np
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LinearRegression
+from sklearn.neighbors import KNeighborsRegressor
+from sklearn.ensemble import RandomForestRegressor
+import warnings
+warnings.filterwarnings(action='ignore')
+burnoutDf = pd.read_csv('C:/Users/Jhansee Ram/Downloads/employee_burnout_analysis.csv')
+burnoutDf.info()
+burnoutDf = burnoutDf.drop('Employee ID', axis=1)
+missing_target_rows = burnoutDf.loc[burnoutDf['Burn Rate'].isna(), :].index
+burnoutDf = burnoutDf.drop(missing_target_rows, axis=0).reset_index(drop=True)
+for column in ['Resource Allocation', 'Mental Fatigue Score']:
+    burnoutDf[column] = burnoutDf[column].fillna(burnoutDf[column].mean())
+
+burnoutDf['Date of Joining'] = pd.to_datetime(burnoutDf['Date of Joining'])
+burnoutDf['Join Month'] = burnoutDf['Date of Joining'].apply(lambda x: x.month)
+burnoutDf['Join Day'] = burnoutDf['Date of Joining'].apply(lambda x: x.day)
+burnoutDf = burnoutDf.drop('Date of Joining', axis=1)
+burnoutDf['Gender'] = burnoutDf['Gender'].replace({'Female': 0, 'Male': 1})
+burnoutDf['Company Type'] = burnoutDf['Company Type'].replace({'Product': 0, 'Service': 1})
+burnoutDf['WFH Setup Available'] = burnoutDf['WFH Setup Available'].replace({'No': 0, 'Yes': 1})
+y = burnoutDf['Burn Rate']
+X = burnoutDf.drop('Burn Rate', axis=1)
+X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.7, shuffle=True, random_state=1)
+scaler = StandardScaler()
+scaler.fit(X_train)
+X_train = pd.DataFrame(scaler.transform(X_train), index=X_train.index, columns=X_train.columns)
+X_test = pd.DataFrame(scaler.transform(X_test), index=X_test.index, columns=X_test.columns)
+
+models = {
+    "                     Linear Regression": LinearRegression(),
+    "                   K-Nearest Neighbors": KNeighborsRegressor(),
+    "                         Random Forest": RandomForestRegressor()
+}
